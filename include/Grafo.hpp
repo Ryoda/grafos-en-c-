@@ -320,7 +320,7 @@ void Grafo<T,C>::eliminarVertice(T v)
                         encontrado = true;
                     }else
                     {
-                        if(this->sucesores(v)->)
+                        if(this->sucesores(v)->localizar)
                     }
 
                     indice = indice->getProx();
