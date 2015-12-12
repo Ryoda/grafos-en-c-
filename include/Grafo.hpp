@@ -10,12 +10,11 @@ template <class T, class C = int>
 class Grafo
 {
     private:
-        NodoV<T,C>* g, *tail;
+        NodoV<T,C>* g;
         int n, a;
     public:
         //constructor
-        Grafo(NodoV<T,C>* g = NULL, int n = 0, int a = 0) : this->g(g), this->n(n), this->a(a) {};
-        ~Grafo();
+        Grafo(NodoV<T,C>* g = NULL, int n = 0, int a = 0) : g(g), n(n), a(a) {};
         //Consultores
         int cantidadDeVertices() const;
         int cantidadDeAristas() const;
@@ -27,18 +26,32 @@ class Grafo
         void sucesores(T, Lista<T>&) const;
         Lista<T> predecesores(T) const;
         void predecesores(T, Lista<T>&) const;
+        void imprimir() const;
+        Lista<T> dfs() const;
         //modificadores
         void addVertice(T);
         void addArco(T, T, C);
         void eliminarVertice(T);
         void eliminarArco(T,T);
+        void vaciar();
         Grafo(const Grafo&);
+        //destructor
+        ~Grafo();
+        //sobrecarga de impresion
+        template<class TP,class CP>
+        friend std::ostream& operator << (std::ostream& o,const Grafo<TP,CP>&g);
+        //sobrecarga de asignacion
+        Grafo<T,C> operator=(Grafo<T,C> &g);
+        NodoV<T,C>* getG() const {return this->g;};
     private:
         NodoV<T,C>* localizarApuntadorV(T u) const;
+        void dfs(T, Lista<T>&) const;
+
 };
 
 //Constructores
-
+//copy constructor (ON PROGRESS)
+/*
 template <class T, class C>
 Grafo<T,C> Grafo<T,C>::operator=(Grafo<T,C> &g)
 {
@@ -50,24 +63,17 @@ Grafo<T,C> Grafo<T,C>::operator=(Grafo<T,C> &g)
         this->
     }
 }
-
+*/
 //consultores
 
 template <class T, class C>
-bool Grafo<T,C>::esVacio()
-{
-    return (this->cantidadDeVertices() == 0);
-}
-
-
-template <class T, class C>
-int Grafo<T,C>::cantidadDeVertices()
+int Grafo<T,C>::cantidadDeVertices() const
 {
     return this->n;
 }
 
 template <class T, class C>
-int Grafo<T,C>::cantidadDeAristas()
+int Grafo<T,C>::cantidadDeAristas() const
 {
     return this->a;
 }
@@ -85,6 +91,7 @@ bool Grafo<T,C>::existeVertice(T v) const
     }
     return encontrado;
 }
+
 template <class T, class C>
 bool Grafo<T,C>::existeArco(T v, T w) const
 {
@@ -116,11 +123,65 @@ bool Grafo<T,C>::existeArco(T v, T w) const
     }
     return encontrado;
 }
+
 template <class T, class C>
-void Grafo<T,C>::addVertice(T v) const
+Lista<T> Grafo<T,C>::dfs() const
+{
+    NodoV<T,C> *v;
+    Lista<T> sucesores;
+    Lista<T> marcados;
+    T e;
+    if(!this->esVacio())
+    {
+        v = this->getG();
+        while(v != NULL)
+        {
+            if(!marcados.localizar(v->getInfo()))
+            {
+                marcados.agregar(v->getInfo());
+                sucesores = this->sucesores(v->getInfo());
+                while(!sucesores.esVacia())
+                {
+                    e = sucesores.consultar();
+                    if(!marcados.localizar(e))
+                    {
+                        marcados.agregar(e);
+                        dfs(e, marcados);
+                    }
+                    sucesores.eliminar();
+                }
+            }
+             v = v->getProx();
+        }
+    }else
+    {
+        std::cout << "dfs(): el grafo esta vacio" << std::endl;
+    }
+    return marcados;
+}
+
+template <class T,class C>
+void Grafo<T,C>::dfs(T e, Lista<T>& marcados) const
+{
+    T u;
+    Lista<T> sucesores = this->sucesores(e);
+    while(!sucesores.esVacia())
+    {
+        u = sucesores.consultar();
+        sucesores.eliminar();
+        if(!marcados.localizar(u))
+        {
+            marcados.agregar(u);
+            this->dfs(u, marcados);
+        }
+    }
+}
+
+//      modificadores
+template <class T, class C>
+void Grafo<T,C>::addVertice(T v)
 {
     NodoV<T,C>* nuevo;
-    NodoV<T,C>* indice;
     if(!this->existeVertice(v))
     {
         nuevo = new NodoV<T,C>(v);
@@ -129,23 +190,18 @@ void Grafo<T,C>::addVertice(T v) const
             this->g = nuevo;
         }else
         {
-            indice = this->g;
-            while(indice->getProx() != NULL)
-            {
-                indice = indice->getProx();
-            }
-            indice->setProx(nuevo);
+            nuevo->setProx(this->g);
+            this->g = nuevo;
         }
         this->n++;
     }else
         std::cout << "agregarV(): el vertice ya existe" << endl;
 }
 template <class T, class C>
-void Grafo<T,C>::addArco(T v, T w, C costo)
+void Grafo<T,C>::addArco(T v, T w, C costo = 1)
 {
-    NodoA<T,C>* nuevo, *indiceA;
-    NodoV<T,C>* verticeV, *verticeW, *indice = this->g;
-    bool encontrado = false;
+    NodoA<T,C>* nuevaArista;
+    NodoV<T,C>* verticeV, *verticeW;
 
     if(!this->esVacio())
     {
@@ -153,26 +209,27 @@ void Grafo<T,C>::addArco(T v, T w, C costo)
         {
             verticeV = this->localizarApuntadorV(v);
             verticeW = this->localizarApuntadorV(w);
-            indiceA = verticeV->getPrimerArista();
-            nuevo = new NodoA(verticeW, costo);
+            nuevaArista = new NodoA<T,C>(verticeW, costo);
 
-            if(indiceA != NULL)
+            if(verticeV->getPrimerArista() != NULL)
             {
-                while( indiceA->getProx() != NULL)
-                {
-                    indiceA = indiceA->getProx();
-                }
-                indiceA->setProx(nuevo);
+                nuevaArista->setProx(verticeV->getPrimerArista());
+                verticeV->setPrimeraArista(nuevaArista);
             }else
             {
-                verticeV->setPrimeraArista(nuevo);
+                verticeV->setPrimeraArista(nuevaArista);
             }
 
             this->a++;
 
         }else
         {
-            std::cout << "addArco(): O alguno o ambos vertices no existen en el grafo, O ya hay un arco entre ambos vertices" << endl;
+            if(!this->existeVertice(v))
+                std::cout << "exepcion en addArco(): el vertice: " << v << " no existe en el grafo" << std::endl;
+            if(!this->existeVertice(w))
+                std::cout << "exepcion en addArco(): el vertice: " << w << " no existe en el grafo" << std::endl;
+            if(this->existeArco(v, w))
+                std::cout << "exepcion en addArco(): el arco de " << v << " a " << w << "ya existe" << std::endl;
         }
     }else
     {
@@ -180,14 +237,14 @@ void Grafo<T,C>::addArco(T v, T w, C costo)
     }
 }
 template <class T, class C>
-void Grafo<T,C>::sucesores(T u, Lista<T>& sucesores)
+void Grafo<T,C>::sucesores(T u, Lista<T>& sucesores) const
 {
     NodoV<T,C> *indiceV;
     NodoA<T,C> *indiceA;
 
     if(!sucesores.esVacia())
     {
-        sucesores.
+        sucesores.reestablecer();
     }
 
     if(!this->esVacio())
@@ -202,7 +259,7 @@ void Grafo<T,C>::sucesores(T u, Lista<T>& sucesores)
             indiceA = indiceV->getPrimerArista();
             while(indiceA != NULL)
             {
-                sucesores.insertar(indiceA->getTerminal()->getInfo());
+                sucesores.agregar(indiceA->getTerminal()->getInfo());
                 indiceA = indiceA->getProx();
             }
         }
@@ -210,9 +267,9 @@ void Grafo<T,C>::sucesores(T u, Lista<T>& sucesores)
 }
 
 template <class T, class C>
-Lista<T> Grafo<T,C>::sucesores(T u)
+Lista<T> Grafo<T,C>::sucesores(T u) const
 {
-    Lista<T> sucesores = new Lista<T>;
+    Lista<T> sucesores;
 
     this->sucesores(u, sucesores);
 
@@ -220,7 +277,7 @@ Lista<T> Grafo<T,C>::sucesores(T u)
 }
 
 template <class T, class C>
-void Grafo<T,C>::predecesores(T u, Lista<T>& predecesores)
+void Grafo<T,C>::predecesores(T u, Lista<T>& predecesores) const
 {
     NodoV<T,C> *indiceV;
     NodoA<T,C> *indiceA;
@@ -238,7 +295,7 @@ void Grafo<T,C>::predecesores(T u, Lista<T>& predecesores)
                 {
                     if(indiceA->getTerminal()->getInfo() == u)
                     {
-                        predecesores.insertar(indiceV->getInfo());
+                        predecesores.agregar(indiceV->getInfo());
                         terminalEncontrado = true;
                     }
                     indiceA = indiceA->getProx();
@@ -250,9 +307,9 @@ void Grafo<T,C>::predecesores(T u, Lista<T>& predecesores)
 }
 
 template <class T, class C>
-Lista<T> Grafo<T,C>::predecesores(T u)
+Lista<T> Grafo<T,C>::predecesores(T u) const
 {
-    Lista<T> predecesores = new Lista<T>;
+    Lista<T> predecesores;
 
     this->predecesores(u, predecesores);
 
@@ -260,7 +317,7 @@ Lista<T> Grafo<T,C>::predecesores(T u)
 }
 
 template <class T, class C>
-NodoV<T,C>* Grafo<T,C>::localizarApuntadorV(T u)
+NodoV<T,C>* Grafo<T,C>::localizarApuntadorV(T u) const
 {
     NodoV<T,C>* indice;
     indice = this->g;
@@ -272,27 +329,42 @@ NodoV<T,C>* Grafo<T,C>::localizarApuntadorV(T u)
 }
 
 template <class T, class C>
-Grafo<T,C>::copiar(Grafo<T,C>& g)
+void Grafo<T,C>::copiar(const Grafo<T,C>& g) const
 {
-    NodoV<T,C>* indicel;
-    if(!this->esVacio())
+    NodoV<T,C>* indice, *nuevo;
+    NodoA<T,C>* indiceA;
+    if(!this->esVacio() || g.esVacio())
         this->reestablecer();
-    indice = g;
-    while(indice != NULL && indice->getInfo() != u)
+    if(!g.esVacio())
     {
-
-        indice = indice->getProx();
+        indice = g.getG();
+        while(indice != NULL)
+        {
+            this->addVertice(indice->getInfo());
+            indice = indice->getProx();
+        }
+        indice = g.getG();
+        while(indice != NULL)
+        {
+            indiceA = indice->getPrimerArista();
+            while(indiceA != NULL)
+            {
+                this->addArco(indice->getInfo(), indiceA->getTerminal()->getInfo(), indiceA->getCost());
+                indiceA = indiceA->getProx();
+            }
+            indice = indice->getProx();
+        }
     }
-    return indice;
 }
 
 template <class T, class C>
 void Grafo<T,C>::eliminarVertice(T v)
 {
-    NodoV<T,C>* indice, *anterior, *arista, *siguiente;
-    NodoA<T,C>* terminales;
-    bool terminaEnV = false;
-    bool encontrado = false;
+    NodoV<T,C>* indice, *verticeAnterior;
+    NodoA<T,C>* terminalesIndice, *terminalAnterior;
+    bool verticeEncontrado = false;
+    bool terminalEncontrado = false;
+    bool encontradoAlInicio = false;
     if(!this->existeVertice(v))
     {
         cout << "posible error en eliminarVertice(): el vertice a eliminar no existe" << endl;
@@ -303,38 +375,67 @@ void Grafo<T,C>::eliminarVertice(T v)
             cout << "posible error en eliminarVertice(): el grafo esta vacio" << endl;
         }else
         {
-
             if(this->g->getInfo() == v)  //si el vertice a eliminar es el primero de la lista
             {
-                encontrado = true;
-                anterior = this->g;
+                encontradoAlInicio = true;
+                verticeEncontrado = true;
+                verticeAnterior = this->g;
                 this->g = this->g->getProx();
-            }else
+                delete verticeAnterior;
+            }
+            indice = this->g;
+
+            while(indice != NULL and indice->getProx() != NULL) //buscando el nodo anterior al nodo que posee el vertice buscado para eliminar
             {
-                indice = this->g->getProx();
-                while(indice != NULL)
+                if(!verticeEncontrado and indice->getProx()->getInfo() == v)
                 {
-                    if(indice->getInfo() == v)
-                    {
-                        anterior = indice;
-                        encontrado = true;
-                    }else
-                    {
-                        if(this->sucesores(v)->localizar)
-                    }
-
-                    indice = indice->getProx();
+                    verticeAnterior = indice;
+                    verticeEncontrado = true;
                 }
-            }
-            //se aisla el NodoV a destruir
-            indice = anterior->getProx();
-            anterior->setProx(indice->getProx());
-            //al final, para eliminar el vertice, primero se eliminan todos los arcos que salen de el
-            while(indice->getPrimerArista() != NULL)
-            {
 
+                if(indice->getPrimerArista() != NULL and indice->getPrimerArista()->getTerminal()->getInfo() == v) //si el primer terminal apunta al vertice buscado para eliminar
+                {
+                    terminalesIndice = indice->getPrimerArista();
+                    indice->setPrimeraArista(indice->getPrimerArista()->getProx());
+                    this->a--;
+                    delete terminalesIndice;
+                }else
+                {
+                    while(terminalesIndice != NULL and terminalesIndice->getProx() != NULL and !terminalEncontrado) //buscando el terminal anterior al vertice buscado a eliminar
+                    {
+                        if(terminalesIndice->getProx()->getTerminal()->getInfo() == v)
+                        {
+                            terminalAnterior = terminalesIndice;
+                            terminalEncontrado = true;
+                        }
+                        terminalesIndice = terminalesIndice->getProx();
+                    }
+                }
+
+                if(terminalEncontrado)
+                {
+                    terminalEncontrado = false;
+                    terminalAnterior->setProx(terminalesIndice->getProx()); //aislando el terminal que apunta al nodo buscado para eliminarlo
+                    delete terminalesIndice;
+                    this->a--;
+                }
+                indice = indice->getProx();
             }
-            delete vertice;
+            if(!encontradoAlInicio) //eliminando el vertice y sus terminales
+            {
+                indice = verticeAnterior->getProx();
+                terminalesIndice = indice->getPrimerArista();
+                while(terminalesIndice != NULL) //eliminando todos los terminales del vertice
+                {
+                    terminalAnterior = terminalesIndice;
+                    terminalesIndice = terminalesIndice->getProx();
+                    delete terminalAnterior;
+                    this->a--;
+                }
+                verticeAnterior->setProx(indice->getProx()); //aislando el vertice a eliminar
+                delete indice;
+                this->n--;
+            }
         }
     }
 }
@@ -343,7 +444,7 @@ template <class T, class C>
 void Grafo<T,C>::eliminarArco(T v, T w)
 {
     NodoV<T,C>* indiceV;
-    NodoA<T,C>* terminales;
+    NodoA<T,C>* terminales, *arista;
     bool terminaEnW = false;
     if(!this->esVacio())
     {
@@ -357,7 +458,7 @@ void Grafo<T,C>::eliminarArco(T v, T w)
                     {
                         terminaEnW = true;
                         arista = terminales;
-                        indice->setPrimeraArista(terminales->getProx());
+                        indiceV->setPrimeraArista(terminales->getProx());
                     }else  //caso en que no se encuentra o se encuentra en el 2do o mas de la lista
                     {
                         while(terminales->getProx() != NULL && !terminaEnW)
@@ -380,13 +481,63 @@ void Grafo<T,C>::eliminarArco(T v, T w)
     }
 }
 
-template Grafo<T,C>
+template <class T, class C>
 void Grafo<T,C>::vaciar()
 {
+    NodoV<T,C> *indiceV, *auxV;
+    NodoA<T,C> *indiceA, *auxA;
+    indiceV = this->g;
     while(!this->esVacio())
     {
-        this->eliminarVertice(1);
+        indiceA = indiceV->getPrimerArista();
+        while(indiceA != NULL)
+        {
+            auxA = indiceA;
+            indiceV->setPrimeraArista(indiceA->getProx());
+            indiceA = indiceA->getProx();
+            delete auxA;
+            this->a--;
+        }
+        auxV = indiceV;
+        this->g = indiceV->getProx();
+        indiceV = indiceV->getProx();
+        delete auxV;
+        this->n--;
     }
 }
 
+//sobrecarga del operador de impresion
+template<class TP,class CP>
+std::ostream& operator << (std::ostream& o,const Grafo<TP,CP>&g)
+{
+    NodoV<TP,CP> *indiceV;
+    NodoA<TP,CP> *indiceA;
+    if(g.esVacio())
+    {
+        o << "el grafo a imprimir esta vacio" << std::endl;
+    }else
+    {
+        indiceV = g.getG();
+        while(indiceV != NULL)
+        {
+            o << indiceV->getInfo() << " ";
+            indiceA = indiceV->getPrimerArista();
+            while(indiceA != NULL)
+            {
+                o << "C(" << indiceA->getTerminal()->getInfo() << "): " << indiceA->getCost() << " ";
+                indiceA = indiceA->getProx();
+            }
+            indiceV = indiceV->getProx();
+            o << std::endl;
+        }
+    }
+    return o;
+}
+
+//destructor
+template <class T,class C>
+Grafo<T,C>::~Grafo()
+{
+    this->vaciar();
+}
 #endif // GRAFO_H

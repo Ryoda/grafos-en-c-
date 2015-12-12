@@ -46,7 +46,7 @@ class Lista
         void concatenar(Lista<T> lista);
         int localizar(T elem) const ;
         void insertar(T datos,int posicion);
-        void insertarAlFinal(T datos);
+        void agregar(T datos);
         void eliminar(int posicion);
         void reestablecer();
         void concatenar(const Lista<T>& lista);
@@ -112,12 +112,12 @@ Lista<T>& Lista<T>::operator = (const Lista<T>& origen)
     }
     if(!origen.esVacia())
     {
-      pOrigen = origen->getInicio();
-      this->insertarAlFinal(pOrigen->getDatos());
+      pOrigen = origen.getInicio();
+      this->agregar(pOrigen->getDatos());
       pOrigen = pOrigen->getSiguiente();
       while(pOrigen != NULL)
       {
-          this->insertarAlFinal(pOrigen->getDatos());
+          this->agregar(pOrigen->getDatos());
           pOrigen = pOrigen->getSiguiente();
       }
     }
@@ -133,7 +133,7 @@ Lista<T>& Lista<T>::operator=(Nodo<T>* origen)
     }
     while(origen != NULL)
     {
-      this->insertarAlFinal(origen->getDatos());
+      this->agregar(origen->getDatos());
       origen = origen->getSiguiente();
     }
     return *this;
@@ -165,7 +165,10 @@ T Lista<T>::consultar(int posicion = 1) const
     Nodo<T> *indice;
     if(posicion < 1 || posicion > this->longitud)
     {
-        cout << "Error: Se intento consultar una posicion de la lista invalida";
+        if((posicion < 1 || posicion > this->longitud) && !this->esVacia())
+            std::cout << "Error: Lista::consultar(): posicion fuera de rango" << std::endl;
+        if(this->esVacia())
+            std::cout << "Error: Lista::consultar(): la lista esta vacia" << std::endl;
     }else
     {
         if(posicion == this->longitud)
@@ -197,7 +200,7 @@ template <class T>
 int Lista<T>::localizar(T elem) const
 {
     Nodo<T>* aux = this->inicio;
-    int pos = 1;
+    int pos = 0;
 
     while(aux != NULL && aux->getDatos() != elem)
     {
@@ -212,7 +215,7 @@ int Lista<T>::localizar(T elem) const
 }
 
 template <class T>
-void Lista<T>::insertar(T datos, int posicion)
+void Lista<T>::insertar(T datos, int posicion = 1)
 {
     Nodo<T> *aux = new Nodo<T>(datos);
     Nodo<T> *indice;
@@ -254,7 +257,7 @@ void Lista<T>::insertar(T datos, int posicion)
 }
 
 template <class T>
-void Lista<T>::insertarAlFinal(T datos)
+void Lista<T>::agregar(T datos)
 {
     this->insertar(datos, this->getLongitud() + 1);
 }
@@ -265,7 +268,10 @@ void Lista<T>::eliminar(int posicion = 1)
     Nodo<T> *aux, *indice;
     if(this->longitud <  posicion || posicion <= 0)
     {
-        cout << "error, se intento eliminar un elemento en la lista en una posicion inexistente" << endl;
+        if(this->longitud < posicion && !this->esVacia())
+            std::cout << "error, Lista::eliminar(): posicion fuera de rango" << endl;
+        if(this->esVacia())
+            std::cout << "error, Lista::eliminar(): la lista esta vacia" << endl;
     }else
     {
 
@@ -347,7 +353,7 @@ void Lista<T>::concatenar(Lista<T> lista) /* se le pasa una copia de la lista or
 {
   while(!lista.esVacia())
   {
-        this->insertarAlFinal(lista->consultar());
+        this->agregar(lista->consultar());
         lista->eliminar();
   }
 }
@@ -491,7 +497,7 @@ void Lista<T>::subLista(Lista<T>& destino,int i, int j) const
         }
         while(contador <= j && j <= this->getLongitud())
         {
-            destino.insertarAlFinal(pOrigen->getDatos());
+            destino.agregar(pOrigen->getDatos());
             pOrigen = pOrigen->getSiguiente();
             contador++;
         }

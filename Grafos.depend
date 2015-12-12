@@ -1,4 +1,31 @@
 # depslib dependency file v1.0
-1385316878 source:c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\main.cpp
+1449956995 source:c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\main.cpp
+	<iostream>
+	<Grafo.hpp>
+	<stdlib.h>
+	<time.h>
+
+1449958315 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\grafo.hpp
+	<iostream>
+	"NodoV.hpp"
+	"NodoA.hpp"
+	"Lista.hpp"
+	"Cola.hpp"
+
+1449893697 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\nodov.hpp
+	<iostream>
+	"NodoA.hpp"
+
+1449937974 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\nodoa.hpp
+	<iostream>
+	"NodoV.hpp"
+
+1449958063 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\lista.hpp
+
+1437746793 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\cola.hpp
+	<iostream>
+	"Nodo.hpp"
+
+1437746579 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\nodo.hpp
 	<iostream>
 
