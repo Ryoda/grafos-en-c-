@@ -200,7 +200,7 @@ template <class T>
 int Lista<T>::localizar(T elem) const
 {
     Nodo<T>* aux = this->inicio;
-    int pos = 0;
+    int pos = 1;
 
     while(aux != NULL && aux->getDatos() != elem)
     {
@@ -209,7 +209,7 @@ int Lista<T>::localizar(T elem) const
     }
     if(aux == NULL)
     {
-        pos = -1;
+        pos = 0;
     }
     return (pos);
 }

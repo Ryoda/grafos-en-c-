@@ -5,7 +5,7 @@
 	<stdlib.h>
 	<time.h>
 
-1449958315 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\grafo.hpp
+1449958984 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\grafo.hpp
 	<iostream>
 	"NodoV.hpp"
 	"NodoA.hpp"
@@ -20,7 +20,7 @@
 	<iostream>
 	"NodoV.hpp"
 
-1449958063 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\lista.hpp
+1449958750 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\lista.hpp
 
 1437746793 c:\users\javier\desktop\estudios\practica algoritmos\c++\grafos\include\cola.hpp
 	<iostream>

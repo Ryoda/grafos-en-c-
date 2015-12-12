@@ -205,7 +205,7 @@ void Grafo<T,C>::addArco(T v, T w, C costo = 1)
 
     if(!this->esVacio())
     {
-        if(this->existeVertice(v) && this->existeVertice(w) && !this->existeArco(v, w))
+        if(this->existeVertice(v) && this->existeVertice(w) && !this->existeArco(v, w) && (v != w))
         {
             verticeV = this->localizarApuntadorV(v);
             verticeW = this->localizarApuntadorV(w);
@@ -230,6 +230,8 @@ void Grafo<T,C>::addArco(T v, T w, C costo = 1)
                 std::cout << "exepcion en addArco(): el vertice: " << w << " no existe en el grafo" << std::endl;
             if(this->existeArco(v, w))
                 std::cout << "exepcion en addArco(): el arco de " << v << " a " << w << "ya existe" << std::endl;
+            if(v == w)
+                std::cout << "exepcion en addArco(): vertice origen y destino son iguales" << std::endl;
         }
     }else
     {
